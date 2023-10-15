@@ -1,10 +1,12 @@
 const express = require('express');
 const clientRouter = require('./routes/clientRoutes');
+const menuRouter = require('./routes/menuRoutes');
 
 const app = express();
 app.use(express.json());
 
 app.use('/api/v1/clients', clientRouter);
+app.use('/api/v1/menus', menuRouter);
 
 app.all('*', (req, res, next) => {
 	return next(new AppError(`Can't find ${req.originalUrl} on the server`, 404));
