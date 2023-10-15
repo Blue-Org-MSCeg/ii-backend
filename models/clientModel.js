@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
 
-const clientSchema = mongoose.Schema({
+const clientSchema = new mongoose.Schema({
 	businessName: {
 		type: String,
 		required: [true, 'A client must have a name'],

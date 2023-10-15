@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const menuSchema = mongoose.Schema({
+const menuSchema = new mongoose.Schema({
 	foodItem: {
 		type: String,
 		required: [true, 'A food must have a name'],

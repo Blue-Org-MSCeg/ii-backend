@@ -1,6 +1,6 @@
 const catchAsync = require('./../utils/catchAsync');
 const Client = require('./../models/clientModel');
-const AppError = require('../utils/AppError');
+const AppError = require('../utils/appError');
 
 exports.getAllClients = catchAsync(async (req, res, next) => {
 	const clients = await Client.find();
