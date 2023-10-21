@@ -86,10 +86,29 @@ exports.getOrderDetails = catchAsync(async (req, res, next) => {
 
 exports.getInvoiceDetails = catchAsync(async (req, res, next) => {
 	const businessName = req.params.businessName;
+
+	// finding the client document from Client collection to get their lastInvoiceGeneratedDate
+	const client = await Client.find({ businessName: businessName });
+
+	if (!client) {
+		return next(new AppError('No client found with that businessName', 404));
+	}
+
+	const endDate = new Date(client[0].lastInvoiceGeneratedDate);
+	endDate.setDate(endDate.getDate() + 30);
+
 	const invoice = await Order.aggregate([
 		{
 			$match: {
 				businessName: businessName,
+			},
+		},
+		{
+			$match: {
+				orderDate: {
+					$gt: client[0].lastInvoiceGeneratedDate,
+					$lte: endDate,
+				},
 			},
 		},
 		{
@@ -99,6 +118,10 @@ exports.getInvoiceDetails = catchAsync(async (req, res, next) => {
 			},
 		},
 	]);
+
+	if (!invoice) {
+		return next(new AppError('No orders after the lastly generated invoice', 404));
+	}
 
 	res.status(200).json({
 		status: 'success',

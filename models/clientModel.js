@@ -36,8 +36,14 @@ const clientSchema = new mongoose.Schema({
 		type: Date,
 		required: [true, 'A client must have a aggreement end date'],
 	},
-	invoiceGenerationDate: Date,
-	lastInvoiceGeneratedDate: Date,
+	invoiceGenerationDate: {
+		type: Date,
+		default: Date.now(),
+	},
+	lastInvoiceGeneratedDate: {
+		type: Date,
+		default: Date.now(),
+	},
 });
 
 const Client = mongoose.model('Client', clientSchema);
