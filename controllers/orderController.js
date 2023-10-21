@@ -85,7 +85,13 @@ exports.getOrderDetails = catchAsync(async (req, res, next) => {
 });
 
 exports.getInvoiceDetails = catchAsync(async (req, res, next) => {
+	const businessName = req.params.businessName;
 	const invoice = await Order.aggregate([
+		{
+			$match: {
+				businessName: businessName,
+			},
+		},
 		{
 			$group: {
 				_id: '$foodItem',
