@@ -27,6 +27,10 @@ const orderSchema = new mongoose.Schema({
 		default: Date.now(),
 		required: [true, 'order must have a order date '],
 	},
+	foodCost: {
+		type: Number,
+		required: [true, 'An order must have a food cost'],
+	},
 });
 
 const Order = mongoose.model('Order', orderSchema);

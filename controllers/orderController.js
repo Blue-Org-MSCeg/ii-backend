@@ -2,15 +2,27 @@ const Order = require('./../models/orderModel');
 const Client = require('./../models/clientModel');
 const catchAsync = require('./../utils/catchAsync');
 const AppError = require('./../utils/appError');
+const Menu = require('./../models/menuModel');
 
 exports.createOrder = catchAsync(async (req, res, next) => {
-	const client = await Client.find({ businessName: req.body.businessName });
+	const client = await Client.findOne({ businessName: req.body.businessName });
+	console.log(client);
+	if (!client) {
+		return next(new AppError('No client found with that businessName', 404));
+	}
+
+	if (!req.body.foodCost) {
+		const menu = await Menu.findOne({ foodItem: req.body.foodItem });
+		req.body.foodCost = menu.cost;
+	}
+
 	const order = await Order.create({
 		businessName: req.body.businessName,
-		clientId: client[0]._id.toString(),
+		clientId: client._id.toString(),
 		foodItem: req.body.foodItem,
 		numberOfHeads: req.body.numberOfHeads,
 		orderDate: req.body.orderDate,
+		foodCost: req.body.foodCost,
 	});
 
 	res.status(200).json({
@@ -101,10 +113,6 @@ exports.getInvoiceDetails = catchAsync(async (req, res, next) => {
 		{
 			$match: {
 				businessName: businessName,
-			},
-		},
-		{
-			$match: {
 				orderDate: {
 					$gt: client[0].lastInvoiceGeneratedDate,
 					$lte: endDate,
@@ -115,6 +123,14 @@ exports.getInvoiceDetails = catchAsync(async (req, res, next) => {
 			$group: {
 				_id: '$foodItem',
 				quantity: { $sum: '$numberOfHeads' },
+				cost: { $first: '$foodCost' },
+			},
+		},
+		{
+			$project: {
+				quantity: 1,
+				cost: 1,
+				amount: { $multiply: ['$quantity', '$cost'] },
 			},
 		},
 	]);
@@ -122,6 +138,12 @@ exports.getInvoiceDetails = catchAsync(async (req, res, next) => {
 	if (!invoice) {
 		return next(new AppError('No orders after the lastly generated invoice', 404));
 	}
+
+	// update the client's last invoice generation date
+	// const updatedClient = await Client.findOneAndUpdate({ businessName: businessName }, { lastInvoiceGeneratedDate: Date.now() });
+	// if (!updatedClient) {
+	// 	return next(new AppError('No client found with that businessName', 404));
+	// }
 
 	res.status(200).json({
 		status: 'success',
@@ -161,7 +183,6 @@ exports.getReportSheetDetails = catchAsync(async (req, res, next) => {
 		{
 			$group: {
 				_id: '$orderDate',
-				// quantity: { $sum: '$numberOfHeads' },
 				food: {
 					$push: '$$ROOT',
 				},
@@ -170,7 +191,6 @@ exports.getReportSheetDetails = catchAsync(async (req, res, next) => {
 		{
 			$project: {
 				food: 1,
-				// numberOfHeads: 1,
 			},
 		},
 	]);
