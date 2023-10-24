@@ -1,6 +1,8 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
 
+const subDocumentSchema = new mongoose.Schema({ foodItem: String, cost: Number });
+
 const clientSchema = new mongoose.Schema({
 	businessName: {
 		type: String,
@@ -36,14 +38,11 @@ const clientSchema = new mongoose.Schema({
 		type: Date,
 		required: [true, 'A client must have a aggreement end date'],
 	},
-	invoiceGenerationDate: {
-		type: Date,
-		default: Date.now(),
-	},
 	lastInvoiceGeneratedDate: {
 		type: Date,
 		default: Date.now(),
 	},
+	menuCost: [subDocumentSchema],
 });
 
 const Client = mongoose.model('Client', clientSchema);

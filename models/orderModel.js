@@ -1,14 +1,6 @@
 const mongoose = require('mongoose');
 
-const orderSchema = new mongoose.Schema({
-	businessName: {
-		type: String,
-		required: [true, 'order must have a business name'],
-	},
-	clientId: {
-		type: String,
-		required: [true, 'client must have a id'],
-	},
+const subDocumentSchema = new mongoose.Schema({
 	foodItem: {
 		type: String,
 		required: [true, 'order must have a food item'],
@@ -22,15 +14,32 @@ const orderSchema = new mongoose.Schema({
 			},
 		},
 	},
+	foodCost: {
+		type: Number,
+		required: [true, 'An order must have a food cost'],
+		validate: {
+			validator: function (val) {
+				return val > 0;
+			},
+		},
+	},
+});
+
+const orderSchema = new mongoose.Schema({
+	businessName: {
+		type: String,
+		required: [true, 'order must have a business name'],
+	},
+	clientId: {
+		type: String,
+		required: [true, 'client must have a id'],
+	},
 	orderDate: {
 		type: Date,
 		default: Date.now(),
 		required: [true, 'order must have a order date '],
 	},
-	foodCost: {
-		type: Number,
-		required: [true, 'An order must have a food cost'],
-	},
+	orders: [subDocumentSchema],
 });
 
 const Order = mongoose.model('Order', orderSchema);

@@ -6,23 +6,30 @@ const Menu = require('./../models/menuModel');
 
 exports.createOrder = catchAsync(async (req, res, next) => {
 	const client = await Client.findOne({ businessName: req.body.businessName });
-	console.log(client);
+
 	if (!client) {
 		return next(new AppError('No client found with that businessName', 404));
 	}
 
-	if (!req.body.foodCost) {
-		const menu = await Menu.findOne({ foodItem: req.body.foodItem });
-		req.body.foodCost = menu.cost;
+	if (!req.body.orders) {
+		return next(new AppError('No orders to add', 400));
 	}
+
+	req.body.orders.forEach((order) => {
+		if (!order.foodCost) {
+			client.menuCost.forEach((menu) => {
+				if (menu.foodItem === order.foodItem) {
+					order.foodCost = menu.cost;
+				}
+			});
+		}
+	});
 
 	const order = await Order.create({
 		businessName: req.body.businessName,
 		clientId: client._id.toString(),
-		foodItem: req.body.foodItem,
-		numberOfHeads: req.body.numberOfHeads,
 		orderDate: req.body.orderDate,
-		foodCost: req.body.foodCost,
+		orders: req.body.orders,
 	});
 
 	res.status(200).json({
@@ -100,13 +107,13 @@ exports.getInvoiceDetails = catchAsync(async (req, res, next) => {
 	const businessName = req.params.businessName;
 
 	// finding the client document from Client collection to get their lastInvoiceGeneratedDate
-	const client = await Client.find({ businessName: businessName });
+	const client = await Client.findOne({ businessName: businessName });
 
 	if (!client) {
 		return next(new AppError('No client found with that businessName', 404));
 	}
 
-	const endDate = new Date(client[0].lastInvoiceGeneratedDate);
+	const endDate = new Date(client.lastInvoiceGeneratedDate);
 	endDate.setDate(endDate.getDate() + 30);
 
 	const invoice = await Order.aggregate([
@@ -114,7 +121,7 @@ exports.getInvoiceDetails = catchAsync(async (req, res, next) => {
 			$match: {
 				businessName: businessName,
 				orderDate: {
-					$gt: client[0].lastInvoiceGeneratedDate,
+					$gt: client.lastInvoiceGeneratedDate,
 					$lte: endDate,
 				},
 			},
