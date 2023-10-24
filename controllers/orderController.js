@@ -41,19 +41,46 @@ exports.createOrder = catchAsync(async (req, res, next) => {
 });
 
 exports.editOrder = catchAsync(async (req, res, next) => {
-	const order = await Order.findByIdAndUpdate(req.params.id, req.body, {
-		new: true,
-		runValidators: true,
-	});
+	const updatedOrder = await Order.findOneAndUpdate(
+		{
+			_id: req.params.id,
+			'orders.foodItem': req.body.foodItem,
+		},
+		{
+			$set: {
+				'orders.$.numberOfHeads': req.body.numberOfHeads,
+				'orders.$.foodCost': req.body.foodCost,
+			},
+		},
+		{ new: true, runValidators: true }
+	);
 
-	if (!order) {
+	if (!updatedOrder) {
 		return next(new AppError('No order found with that id', 404));
 	}
 
 	res.status(200).json({
 		status: 'success',
 		data: {
-			order: order,
+			order: updatedOrder,
+		},
+	});
+});
+
+exports.addOrder = catchAsync(async (req, res, next) => {
+	const order = await Order.findById(req.params.id);
+
+	if (!order) {
+		return next(new AppError('No order found with that id', 404));
+	}
+
+	order.orders.push(req.body);
+	const updatedOrder = await order.save();
+
+	res.status(200).json({
+		status: 'success',
+		data: {
+			order: updatedOrder,
 		},
 	});
 });
