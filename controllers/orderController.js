@@ -48,6 +48,7 @@ exports.editOrder = catchAsync(async (req, res, next) => {
 		},
 		{
 			$set: {
+				'orders.$.foodItem': req.body.newFoodItem,
 				'orders.$.numberOfHeads': req.body.numberOfHeads,
 				'orders.$.foodCost': req.body.foodCost,
 			},
@@ -105,7 +106,7 @@ exports.addOrder = catchAsync(async (req, res, next) => {
 	});
 });
 
-exports.deleteOrder = catchAsync(async (req, res, next) => {
+exports.deleteEntireOrder = catchAsync(async (req, res, next) => {
 	const order = await Order.findByIdAndDelete(req.params.id);
 
 	if (!order) {
@@ -116,6 +117,24 @@ exports.deleteOrder = catchAsync(async (req, res, next) => {
 		status: 'success',
 		data: {
 			order: order,
+		},
+	});
+});
+
+exports.removeOrder = catchAsync(async (req, res, next) => {
+	const order = await Order.findById(req.params.id);
+
+	if (!order) {
+		return next(new AppError('No order found with that id', 404));
+	}
+
+	order.orders.pop({ _id: req.body.id });
+	const updatedOrder = await order.save();
+
+	res.status(200).json({
+		status: 'success',
+		data: {
+			order: updatedOrder,
 		},
 	});
 });
