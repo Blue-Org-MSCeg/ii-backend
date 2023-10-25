@@ -110,6 +110,21 @@ exports.editMenuQuotation = catchAsync(async (req, res, next) => {
 	});
 });
 
+exports.getMenuQuotations = catchAsync(async (req, res, next) => {
+	const client = await Client.findById(req.params.id);
+
+	if (!client) {
+		return next(new AppError('No client found with that id', 404));
+	}
+
+	res.status(200).json({
+		status: 'success',
+		data: {
+			menuQuotations: client.menuQuotation,
+		},
+	});
+});
+
 exports.removeClient = catchAsync(async (req, res, next) => {
 	const client = await Client.findByIdAndDelete(req.params.id);
 
