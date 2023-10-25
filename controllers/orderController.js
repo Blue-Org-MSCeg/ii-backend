@@ -234,43 +234,40 @@ exports.getReportSheetDetails = catchAsync(async (req, res, next) => {
 	const businessName = req.params.businessName;
 
 	// finding the client document from Client collection to get their lastInvoiceGeneratedDate
-	const client = await Client.find({ businessName: businessName });
+	const client = await Client.findOne({ businessName: businessName });
 
 	if (!client) {
 		return next(new AppError('No client found with that businessName', 404));
 	}
 
-	const endDate = new Date(client[0].lastInvoiceGeneratedDate);
-	endDate.setDate(endDate.getDate() + 30);
+	const startDate = req.body.startDate;
+	const endDate = req.body.endDate;
 
 	const reportSheet = await Order.aggregate([
 		{
 			$match: {
 				businessName: businessName,
-			},
-		},
-		{
-			$match: {
 				orderDate: {
-					$gt: req.body.startDate,
-					$lte: req.body.endDate,
+					$gte: new Date(startDate),
+					$lte: new Date(endDate),
 				},
 			},
 		},
-		{
-			$unwind: '$orders',
-		},
-		{
-			$group: {
-				_id: '$orderDate',
-				food: {
-					$push: '$$ROOT',
-				},
-			},
-		},
+		// {
+		// 	$unwind: '$orders',
+		// },
+		// {
+		// 	$group: {
+		// 		_id: '$orderDate',
+		// 		food: {
+		// 			$push: '$$ROOT',
+		// 		},
+		// 	},
+		// },
 		{
 			$project: {
-				food: 1,
+				orderDate: 1,
+				orders: 1,
 			},
 		},
 	]);

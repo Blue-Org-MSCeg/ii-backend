@@ -46,10 +46,10 @@ const clientSchema = new mongoose.Schema({
 		type: Date,
 		required: [true, 'A client must have a aggreement end date'],
 	},
-	lastInvoiceGeneratedDate: {
-		type: Date,
-		default: Date.now(),
-	},
+	// lastInvoiceGeneratedDate: {
+	// 	type: Date,
+	// 	default: Date.now(),
+	// },
 	menuQuotation: {
 		type: [subDocumentSchema],
 		default: [],
