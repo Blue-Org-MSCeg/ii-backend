@@ -68,13 +68,33 @@ exports.editOrder = catchAsync(async (req, res, next) => {
 });
 
 exports.addOrder = catchAsync(async (req, res, next) => {
+	const client = await Client.findOne({ businessName: req.body.businessName });
+
+	if (!client) {
+		return next(new AppError('No client found with that businessName', 404));
+	}
+
+	if (!req.body.orders) {
+		return next(new AppError('No orders to add', 400));
+	}
+
 	const order = await Order.findById(req.params.id);
 
 	if (!order) {
 		return next(new AppError('No order found with that id', 404));
 	}
 
-	order.orders.push(req.body);
+	req.body.orders.forEach((item) => {
+		if (!item.foodCost) {
+			client.menuCost.forEach((menu) => {
+				if (menu.foodItem === item.foodItem) {
+					item.foodCost = menu.cost;
+				}
+			});
+		}
+		order.orders.push(item);
+	});
+
 	const updatedOrder = await order.save();
 
 	res.status(200).json({
