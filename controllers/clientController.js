@@ -58,7 +58,7 @@ exports.updateClient = catchAsync(async (req, res, next) => {
 	});
 });
 
-exports.addClientMenu = catchAsync(async (req, res, next) => {
+exports.addMenuQuotation = catchAsync(async (req, res, next) => {
 	const client = await Client.findById(req.params.id);
 
 	if (!client) {
@@ -79,6 +79,33 @@ exports.addClientMenu = catchAsync(async (req, res, next) => {
 		status: 'success',
 		data: {
 			client: updatedClient,
+		},
+	});
+});
+
+exports.editMenuQuotation = catchAsync(async (req, res, next) => {
+	const updatedClient = await Client.findOneAndUpdate(
+		{
+			_id: req.params.id,
+			'menuQuotation.foodItem': req.body.foodItem,
+		},
+		{
+			$set: {
+				'menuQuotation.$.foodItem': req.body.newFoodItem,
+				'menuQuotation.$.cost': req.body.cost,
+			},
+		},
+		{ new: true, runValidators: true }
+	);
+
+	if (!updatedClient) {
+		return next(new AppError('No order found with that id', 404));
+	}
+
+	res.status(200).json({
+		status: 'success',
+		data: {
+			order: updatedClient,
 		},
 	});
 });
