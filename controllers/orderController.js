@@ -14,10 +14,10 @@ exports.createOrder = catchAsync(async (req, res, next) => {
 	if (!req.body.orders) {
 		return next(new AppError('No orders to add', 400));
 	}
-
+	console.log(req.body.orders, client);
 	req.body.orders.forEach((order) => {
 		if (!order.foodCost) {
-			client.menuCost.forEach((menu) => {
+			client.menuQuotation.forEach((menu) => {
 				if (menu.foodItem === order.foodItem) {
 					order.foodCost = menu.cost;
 				}
@@ -179,24 +179,28 @@ exports.getInvoiceDetails = catchAsync(async (req, res, next) => {
 		return next(new AppError('No client found with that businessName', 404));
 	}
 
-	const endDate = new Date(client.lastInvoiceGeneratedDate);
-	endDate.setDate(endDate.getDate() + 30);
+	const startDate = req.body.startDate;
+	const endDate = req.body.endDate;
+	console.log(new Date(new Date(Date.now()).toDateString()));
 
 	const invoice = await Order.aggregate([
 		{
 			$match: {
 				businessName: businessName,
 				orderDate: {
-					$gt: client.lastInvoiceGeneratedDate,
-					$lte: endDate,
+					$gte: new Date(startDate),
+					$lte: new Date(endDate),
 				},
 			},
 		},
 		{
+			$unwind: '$orders',
+		},
+		{
 			$group: {
-				_id: '$foodItem',
-				quantity: { $sum: '$numberOfHeads' },
-				cost: { $first: '$foodCost' },
+				_id: '$orders.foodItem',
+				quantity: { $sum: '$orders.numberOfHeads' },
+				cost: { $first: '$orders.foodCost' },
 			},
 		},
 		{
@@ -248,10 +252,13 @@ exports.getReportSheetDetails = catchAsync(async (req, res, next) => {
 		{
 			$match: {
 				orderDate: {
-					$gt: client[0].lastInvoiceGeneratedDate,
-					$lte: endDate,
+					$gt: req.body.startDate,
+					$lte: req.body.endDate,
 				},
 			},
+		},
+		{
+			$unwind: '$orders',
 		},
 		{
 			$group: {
