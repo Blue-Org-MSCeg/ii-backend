@@ -1,7 +1,15 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
 
-const subDocumentSchema = new mongoose.Schema({ foodItem: String, cost: Number });
+const subDocumentSchema = new mongoose.Schema({
+	foodItem: {
+		type: String,
+	},
+	cost: {
+		type: Number,
+		required: [true, 'A food must have a cost'],
+	},
+});
 
 const clientSchema = new mongoose.Schema({
 	businessName: {
@@ -42,7 +50,10 @@ const clientSchema = new mongoose.Schema({
 		type: Date,
 		default: Date.now(),
 	},
-	menuCost: [subDocumentSchema],
+	menuQuotation: {
+		type: [subDocumentSchema],
+		default: [],
+	},
 });
 
 const Client = mongoose.model('Client', clientSchema);

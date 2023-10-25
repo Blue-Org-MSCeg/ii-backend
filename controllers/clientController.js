@@ -58,6 +58,31 @@ exports.updateClient = catchAsync(async (req, res, next) => {
 	});
 });
 
+exports.addClientMenu = catchAsync(async (req, res, next) => {
+	const client = await Client.findById(req.params.id);
+
+	if (!client) {
+		return next(new AppError('No client found with that businessName', 404));
+	}
+
+	if (!req.body.menuQuotation) {
+		return next(new AppError('No menu quotations to add', 400));
+	}
+
+	req.body.menuQuotation.forEach((item) => {
+		client.menuQuotation.push(item);
+	});
+
+	const updatedClient = await client.save();
+
+	res.status(200).json({
+		status: 'success',
+		data: {
+			client: updatedClient,
+		},
+	});
+});
+
 exports.removeClient = catchAsync(async (req, res, next) => {
 	const client = await Client.findByIdAndDelete(req.params.id);
 
