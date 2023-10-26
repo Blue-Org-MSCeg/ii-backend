@@ -181,7 +181,6 @@ exports.getInvoiceDetails = catchAsync(async (req, res, next) => {
 
 	const startDate = req.body.startDate;
 	const endDate = req.body.endDate;
-	console.log(new Date(new Date(Date.now()).toDateString()));
 
 	const invoice = await Order.aggregate([
 		{
@@ -253,17 +252,6 @@ exports.getReportSheetDetails = catchAsync(async (req, res, next) => {
 				},
 			},
 		},
-		// {
-		// 	$unwind: '$orders',
-		// },
-		// {
-		// 	$group: {
-		// 		_id: '$orderDate',
-		// 		food: {
-		// 			$push: '$$ROOT',
-		// 		},
-		// 	},
-		// },
 		{
 			$project: {
 				orderDate: 1,

@@ -42,6 +42,11 @@ const orderSchema = new mongoose.Schema({
 	orders: [subDocumentSchema],
 });
 
+orderSchema.pre('save', function (next) {
+	this.orderDate.setHours(0, 0, 0, 0);
+	next();
+});
+
 const Order = mongoose.model('Order', orderSchema);
 
 module.exports = Order;
