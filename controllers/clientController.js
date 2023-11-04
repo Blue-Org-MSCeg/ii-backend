@@ -65,13 +65,19 @@ exports.addMenuQuotation = catchAsync(async (req, res, next) => {
 		return next(new AppError('No client found with that businessName', 404));
 	}
 
-	if (!req.body.menuQuotation) {
+	// if (!req.body.menuQuotation) {
+	// 	return next(new AppError('No menu quotations to add', 400));
+	// }
+
+	// req.body.menuQuotation.forEach((item) => {
+	// 	client.menuQuotation.push(item);
+	// });
+
+	if (!req.body) {
 		return next(new AppError('No menu quotations to add', 400));
 	}
 
-	req.body.menuQuotation.forEach((item) => {
-		client.menuQuotation.push(item);
-	});
+	client.menuQuotation.push(req.body);
 
 	const updatedClient = await client.save();
 
@@ -135,5 +141,18 @@ exports.removeClient = catchAsync(async (req, res, next) => {
 	res.status(200).json({
 		status: 'success',
 		data: null,
+	});
+});
+
+exports.removeMenuQuotation = catchAsync(async (req, res, next) => {
+	const client = await Client.updateOne({ _id: req.params.clientId }, { $pull: { menuQuotation: { _id: req.params.id } } });
+
+	if (!client) {
+		return next(new AppError('No client found with that id', 404));
+	}
+
+	res.status(200).json({
+		status: 'success',
+		data: client,
 	});
 });

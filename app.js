@@ -2,9 +2,11 @@ const express = require('express');
 const clientRouter = require('./routes/clientRoutes');
 const menuRouter = require('./routes/menuRoutes');
 const orderRouter = require('./routes/orderRoutes');
+const cors = require('cors');
 
 const app = express();
 app.use(express.json());
+app.use(cors({ origin: true, credentials: true }));
 
 app.use('/api/v1/clients', clientRouter);
 app.use('/api/v1/menus', menuRouter);
