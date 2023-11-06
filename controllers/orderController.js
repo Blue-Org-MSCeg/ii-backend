@@ -140,7 +140,24 @@ exports.removeOrder = catchAsync(async (req, res, next) => {
 });
 
 exports.viewOrders = catchAsync(async (req, res, next) => {
-	const orders = await Order.find({ businessName: req.params.businessName });
+	// const orders = await Order.find({ businessName: req.params.businessName });
+
+	const orders = await Order.aggregate([
+		{
+			$match: {
+				businessName: req.params.businessName,
+				orderDate: {
+					$eq: new Date(req.body.date),
+				},
+			},
+		},
+		{
+			$project: {
+				orderDate: 1,
+				orders: 1,
+			},
+		},
+	]);
 
 	if (!orders) {
 		return next(new AppError('No orders found for that client', 404));
