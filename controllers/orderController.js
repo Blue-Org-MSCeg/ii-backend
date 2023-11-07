@@ -2,7 +2,6 @@ const Order = require('./../models/orderModel');
 const Client = require('./../models/clientModel');
 const catchAsync = require('./../utils/catchAsync');
 const AppError = require('./../utils/appError');
-const Menu = require('./../models/menuModel');
 
 exports.createOrder = catchAsync(async (req, res, next) => {
 	const client = await Client.findOne({ businessName: req.body.businessName });
@@ -41,20 +40,7 @@ exports.createOrder = catchAsync(async (req, res, next) => {
 });
 
 exports.editOrder = catchAsync(async (req, res, next) => {
-	const updatedOrder = await Order.findOneAndUpdate(
-		{
-			_id: req.params.id,
-			'orders.foodItem': req.body.foodItem,
-		},
-		{
-			$set: {
-				'orders.$.foodItem': req.body.newFoodItem,
-				'orders.$.numberOfHeads': req.body.numberOfHeads,
-				'orders.$.foodCost': req.body.foodCost,
-			},
-		},
-		{ new: true, runValidators: true }
-	);
+	const updatedOrder = await Order.findOneAndUpdate({ _id: req.params.id, 'orders.foodItem': req.body.foodItem }, { $set: { 'orders.$.numberOfHeads': req.body.numberOfHeads } }, { new: true });
 
 	if (!updatedOrder) {
 		return next(new AppError('No order found with that id', 404));
@@ -179,8 +165,8 @@ exports.getInvoiceDetails = catchAsync(async (req, res, next) => {
 		return next(new AppError('No client found with that businessName', 404));
 	}
 
-	const startDate = req.body.startDate;
-	const endDate = req.body.endDate;
+	const startDate = req.params.startDate;
+	const endDate = req.params.endDate;
 
 	const invoice = await Order.aggregate([
 		{
