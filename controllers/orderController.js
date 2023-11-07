@@ -108,13 +108,12 @@ exports.deleteEntireOrder = catchAsync(async (req, res, next) => {
 });
 
 exports.removeOrder = catchAsync(async (req, res, next) => {
-	const order = await Order.findById(req.params.id);
+	const order = await Order.findOneAndUpdate({ _id: req.params.id }, { $pull: { orders: { _id: req.body._id } } }, { new: true });
 
 	if (!order) {
 		return next(new AppError('No order found with that id', 404));
 	}
 
-	order.orders.pop({ _id: req.body.id });
 	const updatedOrder = await order.save();
 
 	res.status(200).json({
