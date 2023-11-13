@@ -1,6 +1,7 @@
 const catchAsync = require('./../utils/catchAsync');
 const Client = require('./../models/clientModel');
 const AppError = require('../utils/appError');
+const Menu = require('./../models/menuModel');
 
 exports.getAllClients = catchAsync(async (req, res, next) => {
 	const clients = await Client.find();
@@ -30,6 +31,8 @@ exports.getClient = catchAsync(async (req, res, next) => {
 });
 
 exports.createClient = catchAsync(async (req, res, next) => {
+	const menu = await Menu.find();
+	req.body.menuQuotation = menu;
 	const newClient = await Client.create(req.body);
 
 	res.status(200).json({
