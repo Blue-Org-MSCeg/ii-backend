@@ -200,12 +200,6 @@ exports.getInvoiceDetails = catchAsync(async (req, res, next) => {
 		return next(new AppError('No orders after the lastly generated invoice', 404));
 	}
 
-	// update the client's last invoice generation date
-	// const updatedClient = await Client.findOneAndUpdate({ businessName: businessName }, { lastInvoiceGeneratedDate: Date.now() });
-	// if (!updatedClient) {
-	// 	return next(new AppError('No client found with that businessName', 404));
-	// }
-
 	res.status(200).json({
 		status: 'success',
 		data: {
@@ -224,8 +218,8 @@ exports.getReportSheetDetails = catchAsync(async (req, res, next) => {
 		return next(new AppError('No client found with that businessName', 404));
 	}
 
-	const startDate = req.body.startDate;
-	const endDate = req.body.endDate;
+	const startDate = req.params.startDate;
+	const endDate = req.params.endDate;
 
 	const reportSheet = await Order.aggregate([
 		{
