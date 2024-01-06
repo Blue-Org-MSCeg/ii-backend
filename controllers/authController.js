@@ -3,6 +3,8 @@ const AppError = require('../utils/appError');
 const catchAsync = require('../utils/catchAsync');
 const jwt = require('jsonwebtoken');
 const { promisify } = require('util');
+const sendEmail = require('../utils/email');
+const crypto = require('crypto');
 
 const signToken = (id) => {
 	return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -51,6 +53,63 @@ exports.login = catchAsync(async (req, res, next) => {
 	});
 });
 
+exports.forgotPassword = catchAsync(async (req, res, next) => {
+	// 1)  get user based on email
+	const user = await User.findOne({ email: req.body.email });
+	if (!user) {
+		return next(new AppError('No user found with that email', 404));
+	}
+
+	// 2) generate random reset token
+	const resetToken = user.generatePasswordResetToken();
+	await user.save({ validateBeforeSave: false });
+
+	// 3) send email
+	try {
+		sendEmail({
+			email: user.email,
+			subject: 'Your password reset token(valid for 10mins)',
+			message: resetToken,
+		});
+
+		res.status(200).json({
+			status: 'success',
+			message: 'reset token sent to email',
+		});
+	} catch (err) {
+		user.passwordResetToken = undefined;
+		user.passwordResetTokenExpiresIn = undefined;
+		await user.save({ validateBeforeSave: false });
+
+		return next(new AppError('There was an error sending the email', 500));
+	}
+});
+
+exports.resetPassword = catchAsync(async (req, res, next) => {
+	// 1) get user based on token
+	const hashedToken = crypto.createHash('sha256').update(req.params.token).digest('hex');
+	const user = await User.findOne({ passwordResetToken: hashedToken, passwordResetTokenExpiresIn: { $gt: Date.now() } });
+
+	// 2) check if token has not expired and set new password
+	if (!user) {
+		return next(new AppError('Token is invalid or expired', 400));
+	}
+
+	user.password = req.body.password;
+	user.passwordConfirm = req.body.passwordConfirm;
+	user.passwordResetToken = undefined;
+	user.passwordResetTokenExpiresIn = undefined;
+	await user.save({ validateBeforeSave: false });
+
+	// 3) log the user in
+	const token = signToken(user._id);
+
+	res.status(200).json({
+		status: 'success',
+		token: token,
+	});
+});
+
 exports.protect = catchAsync(async (req, res, next) => {
 	let token, decoded;
 	// 1) get the token and check if it's there
@@ -91,3 +150,12 @@ exports.protect = catchAsync(async (req, res, next) => {
 	req.user = currentUser;
 	next();
 });
+
+exports.restrictTo = (...roles) => {
+	return (req, res, next) => {
+		if (!roles.includes(req.user.role)) {
+			return next(new AppError('You dont have permission to perform this action'));
+		}
+		next();
+	};
+};
