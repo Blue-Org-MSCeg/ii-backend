@@ -12,6 +12,26 @@ const signToken = (id) => {
 	});
 };
 
+const createSendToken = (user, statusCode, res) => {
+	const token = signToken(user._id);
+
+	const cookieOptions = {
+		expires: new Date(Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000),
+		secure: true,
+		httpOnly: true,
+	};
+
+	res.cookie('jwt', token, cookieOptions);
+
+	res.status(statusCode).json({
+		status: 'success',
+		token,
+		data: {
+			user: user,
+		},
+	});
+};
+
 exports.signUp = catchAsync(async (req, res, next) => {
 	const newUser = await User.create({
 		name: req.body.name,
@@ -20,15 +40,7 @@ exports.signUp = catchAsync(async (req, res, next) => {
 		passwordConfirm: req.body.passwordConfirm,
 	});
 
-	const token = signToken(newUser._id);
-
-	res.status(200).json({
-		status: 'success',
-		token,
-		data: {
-			user: newUser,
-		},
-	});
+	createSendToken(newUser, 200, res);
 });
 
 exports.login = catchAsync(async (req, res, next) => {
@@ -45,12 +57,7 @@ exports.login = catchAsync(async (req, res, next) => {
 	}
 
 	// 3) if everything is ok send token to client
-	token = signToken(user._id);
-
-	res.status(200).json({
-		status: 'success',
-		token: token,
-	});
+	createSendToken(user, 200, res);
 });
 
 exports.forgotPassword = catchAsync(async (req, res, next) => {
@@ -102,12 +109,7 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
 	await user.save({ validateBeforeSave: false });
 
 	// 3) log the user in
-	const token = signToken(user._id);
-
-	res.status(201).json({
-		status: 'success',
-		token: token,
-	});
+	createSendToken(user, 201, res);
 });
 
 exports.updateUserPassword = catchAsync(async (req, res, next) => {
@@ -115,7 +117,7 @@ exports.updateUserPassword = catchAsync(async (req, res, next) => {
 	const user = await User.findById(req.user._id).select('+password');
 
 	// 2) check whether the given password is correct
-	if (!user.correctPassword(req.body.password, user.oldPassword)) {
+	if (!user.correctPassword(req.body.oldPassword, user.password)) {
 		return next(new AppError('Password is not correct', 400));
 	}
 
@@ -125,12 +127,7 @@ exports.updateUserPassword = catchAsync(async (req, res, next) => {
 	await user.save();
 
 	// 4) Log the new user in
-	const token = signToken(user._id);
-
-	res.status(201).json({
-		status: 'success',
-		token,
-	});
+	createSendToken(user, 201, res);
 });
 
 exports.protect = catchAsync(async (req, res, next) => {
