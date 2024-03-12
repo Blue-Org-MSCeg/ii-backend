@@ -13,7 +13,6 @@ exports.createOrder = catchAsync(async (req, res, next) => {
 	if (!req.body.orders) {
 		return next(new AppError('No orders to add', 400));
 	}
-	console.log(req.body.orders, client);
 	req.body.orders.forEach((order) => {
 		if (!order.foodCost) {
 			client.menuQuotation.forEach((menu) => {

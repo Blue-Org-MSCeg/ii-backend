@@ -148,7 +148,7 @@ exports.removeClient = catchAsync(async (req, res, next) => {
 });
 
 exports.removeMenuQuotation = catchAsync(async (req, res, next) => {
-	const client = await Client.updateOne({ _id: req.params.clientId }, { $pull: { menuQuotation: { _id: req.params.id } } });
+	const client = await Client.findOneAndUpdate({ _id: req.params.clientId }, { $pull: { menuQuotation: { _id: req.params.id } } }, { new: true });
 
 	if (!client) {
 		return next(new AppError('No client found with that id', 404));

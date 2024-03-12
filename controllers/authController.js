@@ -134,6 +134,7 @@ exports.protect = catchAsync(async (req, res, next) => {
 	let token, decoded;
 	// 1) get the token and check if it's there
 	if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+		console.log(req.headers);
 		token = req.headers.authorization.split(' ')[1];
 	}
 
@@ -168,6 +169,9 @@ exports.protect = catchAsync(async (req, res, next) => {
 
 	// GRANT ACCESS TO THE USER
 	req.user = currentUser;
+	// res.status(200).json({
+	// 	user: currentUser,
+	// });
 	next();
 });
 
