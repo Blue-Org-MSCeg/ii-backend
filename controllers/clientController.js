@@ -2,6 +2,7 @@ const catchAsync = require('./../utils/catchAsync');
 const Client = require('./../models/clientModel');
 const AppError = require('../utils/appError');
 const Menu = require('./../models/menuModel');
+const { validationResult } = require('express-validator');
 
 exports.getAllClients = catchAsync(async (req, res, next) => {
 	const clients = await Client.find();
